@@ -1,0 +1,63 @@
+const express         =     require("express");
+const app             =     express();
+const expressLayouts  =     require("express-ejs-layouts")
+const mongoose        =     require("mongoose")
+const flash           =     require("connect-flash")
+const session         =     require("express-session")
+const passport        =     require("passport")
+const Driver          =     require("./Socket/socket.io")
+const Winston         =     require("./logger/winston")
+const morgan          =     require("morgan")
+//passport config
+require("./config/passport")
+
+app.use(express.static('public'))
+//EJS
+app.use(expressLayouts)
+app.set('view engine','ejs');
+
+// winston logger
+app.use(morgan('combined', { stream: Winston.stream }));
+
+//bodyparser
+app.use(express.urlencoded({extended:true}))
+
+//express Session middleware
+app.use(session({
+    secret: 'secret',
+    resave: true,
+    saveUninitialized: true
+  }));
+
+
+//passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+ //connect flash
+ app.use(flash()) 
+
+ //Global Vars
+app.use((req,res,next)=>{
+    res.locals.success_msg = req.flash("success_msg");
+    res.locals.error_msg = req.flash("error_msg") 
+    res.locals.error = req.flash("error") 
+    next();
+})
+//socket
+Driver();
+
+//routes
+app.use('/',require("./Routes/index"))
+app.use('/users',require("./Routes/users"))
+app.use('/polls',require("./Routes/polls"))
+
+const PORT = process.env.PORT||7000;
+//connect to Mongo
+mongoose.connect("mongodb://127.0.0.1/passport_auth",{useNewUrlParser:true,useUnifiedTopology:true})
+  .then(()=>{
+    console.log("MONGODb connected");
+    app.listen(PORT,console.log(`server started at ${7000}`))
+  })
+  .catch((err)=>console.log(err));

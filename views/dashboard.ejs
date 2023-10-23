@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <title>MongoChat</title>
+    <style>
+        #messages {
+            height: 300px;
+        }
+
+        body {
+            background-color: rgb(248, 153, 115);
+        }
+
+        #message-box {
+            margin-top: 80px;
+            border-top: 2px solid #f39c12;
+            border-top-color: 1px solid red;
+            background: white;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            padding: 0px;
+        }
+
+        .top-header {
+            background: lightcyan;
+            box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.08);
+            /* padding: 0; */
+            margin: 0;
+            padding: 10px;
+        }
+
+        .padd-0 {
+            margin-top: 10px;
+            padding-bottom: 5px;
+            /* background: red; */
+            border-bottom: 1px solid rgb(22, 22, 21);
+            margin-right: 0px;
+            margin-left: 0px;
+        }
+
+        .img {
+            height: 43px;
+            /* padding: 10px; */
+            padding-top: 10px;
+            background: rgb(137, 137, 241);
+            border-radius: 50%;
+
+        }
+
+        .text {
+            margin-top: 9px;
+        }
+
+        .float-right {
+            width: 50%;
+            float: left;
+        }
+
+        .float-right {
+            font-size: 16px;
+            margin-top: 5px;
+            overflow: auto;
+            margin-bottom: 5px;
+            border-radius: 15.3px;
+            -webkit-box-pack: end;
+            -ms-flex-pack: end;
+            justify-content: flex-end;
+            width: 100%;
+            padding: 9px;
+            border-radius: 21.2px;
+        }
+
+        .float-left {
+            font-size: 16px;
+            overflow: auto;
+            border-radius: 15.3px;
+            -webkit-box-pack: end;
+            -ms-flex-pack: end;
+            justify-content: flex-end;
+            width: 100%;
+            padding: 9px;
+            border-radius: 21.2px;
+        }
+
+        .chat-sent-div {
+            max-width: 80%;
+            width: -webkit-max-content;
+            width: -moz-max-content;
+            width: max-content;
+            -webkit-box-shadow: 0 3px 12px 0 rgba(124, 124, 124, 0.1);
+            box-shadow: 0 3px 12px 0 rgba(124, 124, 124, 0.1);
+            background-color: blue;
+            color: white;
+            padding: 10px;
+            border-bottom-right-radius: 20px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            float: right;
+        }
+
+        .chat-receive-div {
+            max-width: 80%;
+            width: -webkit-max-content;
+            width: -moz-max-content;
+            width: max-content;
+            -webkit-box-shadow: 0 3px 12px 0 rgba(124, 124, 124, 0.1);
+            box-shadow: 0 3px 12px 0 rgba(124, 124, 124, 0.1);
+            background-color: blue;
+            color: white;
+            padding: 10px;
+            border-bottom-left-radius: 20px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+
+        }
+
+        .poll-options-name {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row col-12 top-header">
+        <div class="col-6 ">
+            <h1>ChatApp</h1>
+        </div>
+        <div class="col-6" style="text-align:end">
+            <button id="clear" class="btn btn-danger">Clear</button>&nbsp
+            <!-- <button id="poll" class="btn btn-danger">Poll</button>&nbsp -->
+            <button type="button" class="btn btn-info btn-md" data-toggle="modal" data-target="#myModal">Poll</button>
+            <a href="/users/logout" class="btn btn-warning">LogOut</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-8 " style="margin-top:34px;">
+                <p class="lead mb-3"> Welcome <%= name %>
+                </p>
+                <div id="status"></div>
+                <div id="read"></div>
+                <div id="chat">
+                    <div class="card">
+                        <div id="messages" class="card-block"
+                            style="overflow:scroll; background:white; height:370px; border-top: 2px solid #f39c12;">
+                        </div>
+                    </div>
+                    <br>
+                    <textarea id="textarea" class="form-control" style="border-top: 2px solid #f39c12"
+                        placeholder="enter message .."></textarea>
+                </div>
+            </div>
+            <div>
+
+            </div>
+            <div class="col-sm-3" id="message-box">
+                <div class="box-header with-border">
+                    <h4 class="box-title">Online Members</h4>
+                </div>
+
+                <div id="online-users" style="width:100%">
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modal Start-->
+        <div class="container">
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+                            <h4 class="modal-title"><strong>Poll</strong> : Who will win the WorldCup ?</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group form-check poll-select-section">
+                                <input type="radio" class="form-check-input" name="vote" value="India" id="first"> <span
+                                    class="poll-options-name">India</span>
+                                <br>
+                                <input type="radio" class="form-check-input" name="vote" value="Australia" id="second">
+                                <span class="poll-options-name">Australia</span>
+                                <br>
+                                <input type="radio" class="form-check-input" name="vote" value="England" id="third">
+                                <span class="poll-options-name">England</span>
+                                <br>
+                                <input type="radio" class="form-check-input" name="vote" value="Newzeland" id="fourth">
+                                <span class="poll-options-name">NewZeland</span>
+                                <br>
+                                <br>
+                                <button style="border-radius: 0px; margin-top: -30px;" id="poll-submit-button"
+                                    class="btn btn-info">Submit</button>
+                            </div>
+                            <div id="chart"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Modal end -->
+            <script id="user-data" type="application/json">
+    <%= name %>
+</script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+            <script>
+                var user_name = document.getElementById('user-data').textContent;
+
+                (function () {
+
+                    var element = function (id) {
+                        return document.getElementById(id)
+                    }
+
+                    //get elemnt
+                    var status = element('status')
+                    var messages = element('messages')
+                    var textarea = element('textarea')
+                    var clearBtn = element('clear')
+                    var pollBtn = element('poll');
+                    const pollSubmitButton = document.getElementById("poll-submit-button");
+                    const pollId = "Up20Jh";//document.querySelector(".redirectKey").id;
+
+                    //set default status
+                    var statusDefault = status.textContent;
+                    var setStatus = function (s) {
+                        //set status
+                        status.textContent = s;
+                        if (s !== statusDefault) {
+                            var delay = setTimeout(function () {
+                                setStatus(statusDefault)
+                            }, 2000)
+                        }
+                    }
+
+                    //connect to socket.io
+                    var socket = io.connect("http://127.0.0.1:4000/");
+                    //check for connection
+                    if (socket !== undefined) {
+                        console.log("connected to socket ...")
+                        socket.emit("user_Connected", user_name);
+                        //handle output    
+                        socket.on('output', function (data) {
+
+                            if (data.length) {
+                                for (var x = 0; x < data.length; x++) {
+                                    //build out messages div
+                                    var mainDiv = document.getElementById('messages')
+                                    if (data[x].name === user_name) {
+
+                                        let sent_data_div = document.createElement("div");
+                                        let sent_data_text = document.createElement("div");
+                                        let node = document.createTextNode(data[x].message);
+                                        let mainElement = document.getElementById("messages");
+                                        sent_data_text.appendChild(node);
+                                        sent_data_div.appendChild(sent_data_text);
+                                        mainElement.appendChild(sent_data_div);
+                                        sent_data_text.className = "chat-sent-div";
+                                        sent_data_div.className = "float-left";
+
+                                    } else {
+
+                                        let sent_data_div = document.createElement("div");
+                                        let sent_data_text = document.createElement("div");
+                                        let node = document.createTextNode(data[x].name + ":" + " " + data[x].message);
+                                        let mainElement = document.getElementById("messages");
+                                        sent_data_text.appendChild(node);
+                                        sent_data_div.appendChild(sent_data_text);
+                                        mainElement.appendChild(sent_data_div);
+                                        sent_data_text.className = "chat-receive-div";
+                                        sent_data_div.className = "float-right";
+                                    }
+                                }
+                            }
+                        })
+
+                        //get status from the server
+                        socket.on('status', function (data) {
+                            //get messae status
+                            setStatus((typeof data === 'object') ? data.message : data)
+
+                            //if status is clear,clear the text
+                            if (data.clear) {
+                                textarea.value = "";
+                            }
+                        })
+
+                        //handle Input
+                        textarea.addEventListener("keydown", function (event) {
+                            //13 is for enter key
+                            if (event.which === 13 && event.shiftKey == false) {
+                                //emit to the server input
+                                socket.emit('input', {
+                                    name: user_name,
+                                    message: textarea.value
+                                })
+                                event.preventDefault();
+                            } else {
+                                socket.emit("typing", { user_name })
+                            }
+                        })
+                        socket.on("typing_status", function (s) {
+                            setStatus(s)
+                        })
+
+                        //handle clear button
+                        clearBtn.addEventListener('click', function () {
+                            socket.emit('clear', 'clear_chat');
+                        })
+
+                        // handle poll button
+                        // pollBtn.addEventListener('click', function () {
+
+                        //     socket.emit('poll', 'start_poll');
+                        // })
+
+
+                        pollSubmitButton.addEventListener("click", () => {
+                            const choice = document.querySelector("input[name=vote]:checked").value;
+                            const index = document.querySelector("input[name=vote]:checked").id;
+                            const apiUrl = `/polls/vote?pollId=${pollId}&pollAnswer=${index}`;
+
+                            fetch(apiUrl, {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                            })
+                                .then((res) => {
+                                    return res.json();
+                                })
+                                .then((data) => {
+                                    var options = {
+                                        chart: {
+                                            type: "bar",
+                                            animations: {
+                                                enabled: true,
+                                            },
+                                        },
+                                        series: [
+                                            {
+                                                name: "votes",
+                                                data: [
+                                                    data.first.votes,
+                                                    data.second.votes,
+                                                    data.third.votes,
+                                                    data.fourth.votes,
+                                                ],
+                                            },
+                                        ],
+                                        xaxis: {
+                                            categories: [
+                                                data.first.name,
+                                                data.second.name,
+                                                data.third.name,
+                                                data.fourth.name,
+                                            ],
+                                        },
+                                    };
+                                    var chart = new ApexCharts(document.querySelector("#chart"), options);
+                                    $('.poll-select-section').css("display","none")
+                                    chart.render();
+                                });
+                        });
+
+
+                        //clear message
+                        socket.on("cleared", function () {
+                            messages.textContent = "";
+                        })
+
+                        socket.on("users_online", function (data) {
+                            let new_online = [];
+                            for (let i = 0; i < data.length; i++) {
+                                if (data[i] == user_name) {
+                                } else {
+                                    new_online.push(data[i])
+                                }
+                            }
+                            // console.log("online users>>>>>",new_online);
+                            let parent = document.getElementById('online-users')
+                            $('#online-users div').empty();
+                            new_online.map(data => {
+                                console.log(">>>>>>>>>>>>>>>>>>>>>>", data)
+                                let messageItem = document.createElement('div');
+                                console.log("!!!!!!!!", data.charAt(1))
+                                messageItem.id = data;
+                                messageItem.className = "row col-12 padd-0";
+                                let img = document.createElement('div');
+
+                                let istLetter = "S";
+                                console.log(">>>>>>>>", istLetter);
+
+                                let name = document.createElement('div');
+                                img.className = "col-2 img";
+                                name.className = "col-9 text";
+                                let node1 = document.createTextNode(istLetter);
+                                img.appendChild(node1)
+                                let node = document.createTextNode(data);
+                                name.appendChild(node);
+                                messageItem.appendChild(img);
+                                messageItem.appendChild(name);
+                                parent.appendChild(messageItem)
+                            })
+                        })
+                    }
+                })();
+            </script>
+</body>
+
+</html>
